@@ -9,6 +9,20 @@
 2. `prompts/*.md`：流程级入口
 3. `scripts/*.py`：确定性执行入口
 
+> 更新摘要（2026-05-12）
+>
+> 这版 starter 已从“目录骨架”升级为“可运行的最小知识库 runtime”：
+> - 支持 `articles` / `books` 双入口
+> - 支持 `raw -> notes -> wiki` 的书籍分支
+> - 补齐 ingest report / health report / lint / health check 最小闭环
+> - 引入 lifecycle 治理（`routed / seeded / parked / compiled`）
+> - 引入 duplicate governance（重复来源、近似重复主题、同书重复副本等）
+>
+> 如果你是第一次进入这个仓库，建议阅读顺序：
+> 1. `knowledge-base-starter/wiki/summaries/workflow-map.md`
+> 2. `knowledge-base-starter/wiki/summaries/current-focus.md`
+> 3. 再按资料类型运行对应 cycle
+
 ---
 
 ## 这套 starter 回顾总结自什么实践
