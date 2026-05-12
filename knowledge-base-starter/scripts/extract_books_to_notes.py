@@ -20,14 +20,15 @@ def slugify(name: str) -> str:
     return text or "untitled"
 
 
-def extract_pdf(src: Path) -> str:
+def extract_pdf(src: Path) -> tuple[str, str]:
     with tempfile.NamedTemporaryFile(suffix='.txt', delete=False) as tmp:
         tmp_path = Path(tmp.name)
     try:
         result = subprocess.run(['pdftotext', str(src), str(tmp_path)], text=True, capture_output=True)
         if result.returncode != 0:
-            raise RuntimeError(result.stderr.strip() or 'pdftotext failed')
-        return tmp_path.read_text(encoding='utf-8', errors='ignore')
+            fallback = f"[PDF extraction failed] {result.stderr.strip() or 'pdftotext failed'}"
+            return fallback, 'pdf-extract-failed'
+        return tmp_path.read_text(encoding='utf-8', errors='ignore'), 'raw-pdftotext'
     finally:
         if tmp_path.exists():
             tmp_path.unlink()
@@ -41,7 +42,7 @@ def strip_html(text: str) -> str:
     return text
 
 
-def extract_epub(src: Path) -> str:
+def extract_epub(src: Path) -> tuple[str, str]:
     chunks = []
     with zipfile.ZipFile(src, 'r') as zf:
         names = [n for n in zf.namelist() if n.lower().endswith(('.html', '.xhtml', '.htm'))]
@@ -53,7 +54,7 @@ def extract_epub(src: Path) -> str:
             cleaned = strip_html(data)
             if cleaned.strip():
                 chunks.append(cleaned)
-    return '\n\n'.join(chunks)
+    return '\n\n'.join(chunks), 'raw-epub-html-strip'
 
 
 def summarize_text(text: str) -> str:
@@ -101,6 +102,7 @@ def main():
 
     if not files:
         print('ERROR: no PDF/EPUB files found')
+        print('请先把书籍原件放入 raw/books/，再执行本脚本。')
         sys.exit(2)
 
     for src in files:
@@ -110,11 +112,9 @@ def main():
             print(f'SKIP_EXISTS {out.name}')
             continue
         if src.suffix.lower() == '.pdf':
-            extracted = extract_pdf(src)
-            quality = 'raw-pdftotext'
+            extracted, quality = extract_pdf(src)
         else:
-            extracted = extract_epub(src)
-            quality = 'raw-epub-html-strip'
+            extracted, quality = extract_epub(src)
         out.write_text(build_note(src, extracted, quality), encoding='utf-8')
         print(f'WROTE {out.name} chars={len(extracted)} quality={quality}')
 

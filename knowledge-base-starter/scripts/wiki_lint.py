@@ -7,6 +7,11 @@ ROOT = Path(__file__).resolve().parent.parent
 WIKI = ROOT / "wiki"
 
 LINK_RE = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
+CHECK_SOURCE_DIRS = {"concepts", "topics", "cases"}
+INDEX_TARGETS = {
+    "topics": "topic-index.md",
+    "cases": "topic-index.md",
+}
 
 
 def md_files(path: Path):
@@ -42,7 +47,7 @@ def check_missing_source(files):
     hits = []
     for file in files:
         text = file.read_text(encoding="utf-8", errors="ignore")
-        if file.parent.name in {"concepts", "topics"}:
+        if file.parent.name in CHECK_SOURCE_DIRS:
             if "## 来源" not in text and "## Source" not in text:
                 hits.append(file)
     return hits
@@ -61,11 +66,11 @@ def check_dead_links(files):
     return hits
 
 
-def topic_index_refs_all_topics(files):
-    topic_index = WIKI / "indexes" / "topic-index.md"
-    if not topic_index.exists():
+def collect_index_reference_gaps(index_name: str, files):
+    index_path = WIKI / "indexes" / index_name
+    if not index_path.exists():
         return [f.name for f in files]
-    text = topic_index.read_text(encoding="utf-8", errors="ignore")
+    text = index_path.read_text(encoding="utf-8", errors="ignore")
     missing = []
     for file in files:
         if file.name not in text:
@@ -75,14 +80,17 @@ def topic_index_refs_all_topics(files):
 
 def main():
     files = md_files(WIKI)
-    topic_files = md_files(WIKI / "topics")
-    concept_files = md_files(WIKI / "concepts")
+    scoped_files = []
+    missing_in_indexes = {}
+    for dirname, index_name in INDEX_TARGETS.items():
+        dir_files = md_files(WIKI / dirname)
+        scoped_files.extend(dir_files)
+        missing_in_indexes[dirname] = collect_index_reference_gaps(index_name, dir_files)
 
     short_pages = check_short_pages(files)
     dup_titles = check_duplicate_titles(files)
-    missing_source = check_missing_source(topic_files + concept_files)
+    missing_source = check_missing_source(scoped_files + md_files(WIKI / "concepts"))
     dead_links = check_dead_links(files)
-    missing_topics_in_index = topic_index_refs_all_topics(topic_files)
 
     print("# Wiki Lint Report")
     print()
@@ -92,7 +100,9 @@ def main():
     print(f"- duplicate titles: {len(dup_titles)}")
     print(f"- missing source sections: {len(missing_source)}")
     print(f"- dead relative links: {len(dead_links)}")
-    print(f"- topics missing in topic-index: {len(missing_topics_in_index)}")
+    for dirname, index_name in INDEX_TARGETS.items():
+        label = index_name.replace('.md', '')
+        print(f"- {dirname} missing in {label}: {len(missing_in_indexes[dirname])}")
     print()
 
     if short_pages:
@@ -119,13 +129,16 @@ def main():
             print(f"- {file}: {link}")
         print()
 
-    if missing_topics_in_index:
-        print("## Topics Missing in topic-index")
-        for name in missing_topics_in_index[:20]:
-            print(f"- {name}")
-        print()
+    for dirname, index_name in INDEX_TARGETS.items():
+        gaps = missing_in_indexes[dirname]
+        if gaps:
+            label = index_name.replace('.md', '')
+            print(f"## {dirname.title()} Missing in {label}")
+            for name in gaps[:20]:
+                print(f"- {name}")
+            print()
 
-    problems = any([short_pages, dup_titles, missing_source, dead_links, missing_topics_in_index])
+    problems = any([short_pages, dup_titles, missing_source, dead_links] + list(missing_in_indexes.values()))
     print(f"STATUS: {'WARN' if problems else 'OK'}")
     sys.exit(1 if problems else 0)
 

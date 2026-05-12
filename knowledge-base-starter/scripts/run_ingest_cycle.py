@@ -55,6 +55,7 @@ def main():
     run([py, str(SCRIPTS / "wiki_lint.py")], allow_fail=args.allow_warn)
 
     if not args.skip_report:
+        run([py, str(SCRIPTS / "generate_ingest_report.py"), args.src, "--date", args.date, "--source", args.source, "--batch", "custom", "--mode", "articles-only"], allow_fail=args.allow_warn)
         run([py, str(SCRIPTS / "generate_health_report.py")], allow_fail=args.allow_warn)
 
     print()

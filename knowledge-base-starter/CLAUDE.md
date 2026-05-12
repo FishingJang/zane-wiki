@@ -75,8 +75,23 @@
   - `wiki/indexes/topic-index.md`
   - `wiki/summaries/current-focus.md`
   - `wiki/summaries/overview.md`
-- 当知识库进入第二阶段时，可补 `cases/` 与 `investment-map.md`
+- 当知识库进入第二阶段时，可补 `cases/`、`investment-map.md`、`topic-pipeline-board.md`、`material-promotion-rubric.md`、`duplicate-intake-policy.md`
+- 当 scripts cycle 已开始运行时，应把 `outputs/reports/` 视为运行导航的一部分，而不只是附件目录
 - 不要把所有流程文档和导航文档硬塞进 concepts 列表
+
+## 生命周期判断要求
+- 新材料默认先进入 `routed`，不要因为“看起来重要”就直接写 wiki
+- 当材料开始显露主题价值时，可先写 seed 页，再决定是否扩为完整 topic
+- OCR 弱、正文不足、只有元数据或杂讯的材料，默认优先判为 `parked`
+- `parked` 不是失败，而是显式决策；如需重开，应先补 OCR / 清洗或等待形成主题簇
+- 只有已进入稳定 wiki 结构、接入导航且通过检查的内容，才应视为 `compiled`
+
+## 重复材料治理要求
+- 重复处理同一目录后，先判断这次是重复来源、近似重复主题、同书重复副本，还是对旧材料的有效补充
+- `--dupN` 只表示安全保留副本，不表示它已成为新增知识资产
+- 对重复来源或近似重复主题，默认先写 ingest/report 判断，不要直接新增 topic / concept / summary
+- 对同一本书再次进入，至少区分：重复副本、疑似新版候选、或可补强旧主题的补充来源
+- 重复判断优先级高于继续编 wiki；先判断是否值得升级，再决定 raw / wiki 动作
 
 ## 风格要求
 - 清晰、直接、克制
